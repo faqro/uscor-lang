@@ -87,3 +87,14 @@ Add GUI/canvas
 | ullint  | Unsigned Long Long Integer  |
 | ldouble  | Long Double  |
 | mt  | Void/No data  |
+
+## How It Works
+1. A lexer program runs through the entire program, generating a list of tokens.
+    1. Sequences of two consecutive underscores are considered a seperate token (unless between quotation marks)
+    2. Regular brackets are considered seperate tokens (unless between quotation marks)
+2. A parser program runs through the list of tokens, creating an abstract syntax tree. The tree struct has two values; a data value, and a subtree value. The subtree value is a list of other ASTs.
+    1. If the parser runs into an open bracket, it will continue as another branch, and decide that all following tokens will be subtrees of this one.
+    2. If the parser runs into a closed bracket, it will exit the current branch, and continue reading in tokens one level lower.
+    3. All double underscores are ignored
+3. A generator program runs through the AST, and converts it into valid C++ code, recursively starting from the lowest level trees, and working its way back up.
+4. The created C++ file is read into a compiler to convert it into an executable file.
