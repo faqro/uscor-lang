@@ -58,9 +58,13 @@ I was bored. Ignore the exorbitant amount of underscores in code
 
 ```
 Add iterator, esp for files
+
 Add <filesystem>
+
 Add <chrono> and <ctime> (including fps and asynch timer features, and time(NULL) method)
+
 Add live keyboard/mouse input (including mouse position)
+
 Add GUI/canvas
 ```
 
