@@ -47,7 +47,7 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_break  | none   | none  | Break a loop  |
 | system_while  | Boolean Value/Name, Functions/Methods...   | none  | Repeat the functions/methods while the boolean value is true  |
 | system_for  | Function/Method, Boolean Value/Name, Function/Method, Functions/Methods...   | none  | Run param0 before the loop, then repeat the functions/methods so long as param1 is true. The method in param2 is run after every iteration  |
-| = or > or < or >= or <= or !=  | Variable Name or Data Value, Variable Name or Data Value  | Boolean Value  | Return a comparison of the two data values  |
+| = or > or < or >= or <= or != or s=  | Variable Name or Data Value, Variable Name or Data Value  | Boolean Value  | Return a comparison of the two data values. "s=" is a string compare.  |
 | (!) data_arr_declare  | Data Type, Variable Name, Variable Name or Data Value...   | Array  | Create an array of type param0, called param1, with size specified by param3+  |
 | (!) data_arr_specify  | Variable Name, Variable Name or Data Value...   | Section of Array/Vector/String  | Get the item at index param1 of the array, vector, or string with name param0  |
 | (!) data_arrv_declare  | Data Type, Variable Name, Variable Name or Data Value   | Array  | Create a vector of type param0, called param1, with the number of dimensions specified by param2  |
@@ -62,6 +62,8 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_io_file_open  | Variable Name or Data Value, Fileaccess Name   | none  | Open a file from directory param2. |
 | system_io_file_isopen  | Fileaccess Name   | Boolean Value  | Return whether the fileaccess is holding a file |
 | system_io_file_iseof  | Fileaccess Name   | Boolean Value  | Return whether the file has finished reading |
+| system_io_file_pointer  | Fileaccess Name   | Data Value  | Returns the current position of the file pointer |
+| system_io_file_pointer_move  | Fileaccess Name, 'b' or 'e' or 'c', Data Value or Variable Name   | none  | Move the position of the file pointer, relative to the beginning, end, or current position |
 | system_run_cpp  | String value   | none  | Run C++ code |
 
 ```
