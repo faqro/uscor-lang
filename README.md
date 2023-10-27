@@ -10,7 +10,7 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | data_declare  | Data Type, Variable Name  | Variable Name  | Defines a new variable with specified data type  |
 | <<  | Variable Name, Variable Name or Data Value  | none  | Assigns second parameter value to first parameter |
 | + or - or / or *  | Variable Name or Data Value  | Data Value  | Outputs operands applied to parameters  |
-| system_io_input  | "console" or ("file" and Fileaccess name) or ("file+" and Fileaccess name) or ("file-" and Fileaccess name)  | Data Value  | Gets user input from console or a file. "file+" will get a full line. "file-" will read only a character  |
+| system_io_input  | "console" or ("file" and Fileaccess name) or ("file+" and Fileaccess name) or ("file-" and Fileaccess name) or ("file-=" and Fileaccess name)  | Data Value  | Gets user input from console or a file. "file+" will get a full line. "file-" will read only a character.  "file-=" will read only a character without moving the pointer.  |
 | system_io_output  | "console" or ("file" and Fileaccess name)  | Variable Name  | Access output to console or a file  |
 | data_type_conversion  | Data Type, Data Type, Variable Name or Data Value  | Data Value  | Convert a value's data type  |
 | system_force  | Function/Method  | Same as input  | Force a function or method to be used as an action instead of an expression. Intended for debugging.  |
