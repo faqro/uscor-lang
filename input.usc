@@ -4,3 +4,4 @@
 (<<__(system_io_output__console)__"Second number to add: ")
 (<<__(data_arr_specify__myArray__1)__(system_io_input__console))
 (<<__(system_io_output__console)__(+__(data_type_conversion__int__str__(data_arr_specify__myArray__0))__" + "__(data_type_conversion__int__str__(data_arr_specify__myArray__1))__" = "__(data_type_conversion__int__str__(+__(data_arr_specify__myArray__0)__(data_arr_specify__myArray__1)))))
+(<<__(data_arr_specify__myArray__0)__(system_io_input__console))

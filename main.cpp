@@ -4,11 +4,17 @@
 #include "generator.h"
 #include "parser.h"
 
+#include <filesystem>
 
 // using namespace std;
 
 ifstream fileRead("input.usc");
 ofstream fileOut("outputUscorProgramMid.cpp");
+
+bool fexists(string path) {
+  string filepath = {path};
+  return filesystem::exists(filepath);
+}
 
 int main() {
   cout<<"USCOR PROGRAMMING LANGUAGE\nMADE BY FARAAZ JAN\n\nNote: you must have the GNU C++ compiler for this compiler to work.\n\nRunning lexer... ";
@@ -32,4 +38,8 @@ int main() {
   system("g++ -o outputUscorProgram.exe outputUscorProgramMid.cpp");
   
   cout<<"done!\n\n";
+
+  if(fexists("outputUscorProgramMid.cpp")&&fexists("outputUscorProgram.exe")) {
+    filesystem::remove("outputUscorProgramMid.cpp");
+  }
 }
