@@ -3,6 +3,15 @@ An esoteric programming language based on C++ and inspired by Lisp
 
 I was bored. Ignore the exorbitant amount of underscores in code
 
+## How to use
+- First make sure that you have the GNU Compiler Collection installed. Windows users can install MinGW. Most Linux distros have g++ preinstalled, otherwise you can install it with `sudo apt-get install g++`. The steps necessary to get the GNU Compiler running on macOS go beyond the scope of this readme, but it should be possible following a tutorial of some kind.
+- There are two ways to compile a .usc program.
+- You can double click the .exe file for the compiler, which will ask for the address of the .usc file to be compiled
+- You can run the compiler as a command line tool. If you do this, you have options:
+    - `-i` specifies the input .usc file
+	- `-o` specifies the output .exe file
+	- `-c` tells the compiler you do not want to delete the .cpp file generated.
+
 ## Methods/Functions
 | Method/Function  | Parameters | Output | Explanation |
 | ------------- | ------------- | ------------- | ------------- |
@@ -48,15 +57,16 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_while  | Boolean Value/Name, Functions/Methods...   | none  | Repeat the functions/methods while the boolean value is true  |
 | system_for  | Function/Method, Boolean Value/Name, Function/Method, Functions/Methods...   | none  | Run param0 before the loop, then repeat the functions/methods so long as param1 is true. The method in param2 is run after every iteration  |
 | = or > or < or >= or <= or != or s=  | Variable Name or Data Value, Variable Name or Data Value  | Boolean Value  | Return a comparison of the two data values. "s=" is a string compare.  |
-| (!) data_arr_declare  | Data Type, Variable Name, Variable Name or Data Value...   | Array  | Create an array of type param0, called param1, with size specified by param3+  |
-| (!) data_arr_specify  | Variable Name, Variable Name or Data Value...   | Section of Array/Vector/String  | Get the item at index param1 of the array, vector, or string with name param0  |
-| (!) data_arrv_declare  | Data Type, Variable Name, Variable Name or Data Value   | Array  | Create a vector of type param0, called param1, with the number of dimensions specified by param2  |
-| (!) data_arrv_size  | Variable Name   | Data Value  | Returns the size of the vector  |
-| (!) data_arrv_resize  | Variable Name, Variable Name or Data Value...   | none  | Resize a vector with the dimensions specified  |
-| (!) data_arrv_push  | Variable Name, Variable Name or Data Value   | none  | Push an item to a vector with data value specified  |
-| (!) data_arrv_pop  | Variable Name   | none  | Remove the last item of a vector  |
-| (!) data_arrv_insert  | Variable Name, Variable Name or Data Value, Variable Name or Data Value   | none  | Insert an item in vector at position param1 with value param2  |
-| (!) data_arrv_erase  | Variable Name, Variable Name or Data Value, Variable Name or Data Value   | none  | Delete items in a vector at positions between param1 and param2  |
+| data_arr_declare  | Data Type, Variable Name, Variable Name or Data Value...   | Array  | Create an array of type param0, called param1, with size specified by param3+  |
+| data_arr_specify  | Variable Name, Variable Name or Data Value...   | Section of Array/Vector/String  | Get the item at index param1 of the array, vector, or string with name param0  |
+| data_arrv_declare  | Data Type, Variable Name, Variable Name or Data Value   | Array  | Create a vector of type param0, called param1, with the number of dimensions specified by param2  |
+| data_arr_group  | Variable Name or Data Value...   | Array  | Create a static non-variable array with all params as values  |
+| data_arrv_size  | Variable Name   | Data Value  | Returns the size of the vector  |
+| data_arrv_resize  | Variable Name, Variable Name or Data Value   | none  | Resize a vector. To specify the dimension you must call data_arr_specify  |
+| data_arrv_push  | Variable Name, Variable Name or Data Value   | none  | Push an item to a vector with data value specified  |
+| data_arrv_pop  | Variable Name   | none  | Remove the last item of a vector  |
+| data_arrv_insert  | Variable Name, Variable Name or Data Value, Variable Name or Data Value   | none  | Insert an item in vector at position param1 with value param2  |
+| data_arrv_erase  | Variable Name, Variable Name or Data Value, Variable Name or Data Value   | none  | Delete items in a vector at positions between param1 and param2  |
 | system_io_file_declare  | "ifs" or "ofs", Fileaccess Name, Variable Name or Data Value (optional)   | none  | Create Fileaccess and open a file from directory param2. "ifs" is read-only, and "ofs" is write-only  |
 | system_io_file_close  | "ifs" or "ofs-" or "ofs+", Fileaccess Name   | none  | Close the file provided. "ofs-" will not flush a writeable file, while "ofs+" will. |
 | system_io_file_open  | Variable Name or Data Value, Fileaccess Name   | none  | Open a file from directory param2. |
