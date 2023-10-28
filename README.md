@@ -1,5 +1,6 @@
 
-<img src="https://raw.githubusercontent.com/faqro/uscor-lang/master/extraRes/UscorLogo.png"/><img src="https://raw.githubusercontent.com/faqro/uscor-lang/master/extraRes/UscorTitleLogo.png"/>
+<img src="https://raw.githubusercontent.com/faqro/uscor-lang/master/extraRes/UscorLogo.png" height="200"/><img src="https://raw.githubusercontent.com/faqro/uscor-lang/master/extraRes/UscorTitleLogo.png" height="200"/>
+
 
 An esoteric programming language based on C++ and inspired by Lisp
 
