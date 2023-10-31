@@ -9,7 +9,7 @@
 
 using namespace std;
 
-versionNumber currentVersion(1, 1, 0);
+versionNumber currentVersion(1, 2, 0);
 versionNumber minimumCompatibleVersion(1, 1, 0);
 
 char programSupported='u'; //u means unclear, y means yes, o means program is too old, n means program is too new
@@ -192,7 +192,7 @@ string generator(AST astTree, bool includeEndBrackets=true) {
       return "to_string("+generator(astTree.subs[2],false)+")";
     } else if(dataTypeFrom=="string") {
       if(dataTypeTo=="int") return "stoi("+generator(astTree.subs[2],false)+")";
-      else if(dataTypeTo=="bool") return "strToBool("+generator(astTree.subs[2],false)+")";
+      else if(dataTypeTo=="bool") return "uscor_lib_integrated_func_strToBool("+generator(astTree.subs[2],false)+")";
       else if(dataTypeTo=="float") return "stof("+generator(astTree.subs[2],false)+")";
       else if(dataTypeTo=="double") return "stod("+generator(astTree.subs[2],false)+")";
       else if(dataTypeTo=="char") return "stoi("+generator(astTree.subs[2],false)+")";
@@ -231,7 +231,7 @@ string generator(AST astTree, bool includeEndBrackets=true) {
       output=output + "==" + generator(astTree.subs[i1],false);
     } return "("+output+")";
   } else if(astTree.data=="s=") {
-    return "strcmp("+generator(astTree.subs[0],false)+", "+generator(astTree.subs[1],false)+")";
+    return "uscor_lib_integrated_func_strcmp("+generator(astTree.subs[0],false)+", "+generator(astTree.subs[1],false)+")";
   } else if(astTree.data=="!=") {
     string output = generator(astTree.subs[0],false);
     for (int i1=1;i1<astTree.subs.size();i1++) {
@@ -312,14 +312,17 @@ string generator(AST astTree, bool includeEndBrackets=true) {
       return "";
     }
   } else if(astTree.data=="string_substr") {
-    return "substr("+generator(astTree.subs[0],false)+", "+generator(astTree.subs[1],false)+", "+generator(astTree.subs[2],false)+")";
+    return "uscor_lib_integrated_func_substr("+generator(astTree.subs[0],false)+", "+generator(astTree.subs[1],false)+", "+generator(astTree.subs[2],false)+")";
   } else if(astTree.data=="string_find") {
-    return "strfind("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+")";
+    return "uscor_lib_integrated_func_strfind("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+")";
   } else if(astTree.data=="string_insert") {
-    return "strins("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+","+generator(astTree.subs[2],false)+")";
+    return "uscor_lib_integrated_func_strins("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+","+generator(astTree.subs[2],false)+")";
   } else if(astTree.data=="system_file_copy") {
     if(includeEndBrackets) return "filesystem::copy("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+", filesystem::copy_options::recursive);";
     else return "filesystem::copy("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+", filesystem::copy_options::recursive)";
+  } else if(astTree.data=="system_file_rename") {
+    if(includeEndBrackets) return "filesystem::rename(p / "+generator(astTree.subs[0],false)+", p / "+generator(astTree.subs[1],false)+");";
+    else return "filesystem::rename(p / "+generator(astTree.subs[0],false)+", p / "+generator(astTree.subs[1],false)+")";
   } else if(astTree.data=="system_file_remove") {
     if(includeEndBrackets) return "filesystem::remove("+generator(astTree.subs[0],false)+");";
     else return "filesystem::remove("+generator(astTree.subs[0],false)+")";
@@ -375,8 +378,8 @@ string generator(AST astTree, bool includeEndBrackets=true) {
   } else if(astTree.data=="string_length") {
     return "strlen("+generator(astTree.subs[0],false)+")";
   } else if(astTree.data=="system_run_shell") {
-    if(includeEndBrackets) return "execComd("+generator(astTree.subs[0],false)+");";
-    else return "execComd("+generator(astTree.subs[0],false)+")";
+    if(includeEndBrackets) return "uscor_lib_integrated_func_execComd("+generator(astTree.subs[0],false)+");";
+    else return "uscor_lib_integrated_func_execComd("+generator(astTree.subs[0],false)+")";
   } else if(astTree.data=="data_arrv_size") {
     return generator(astTree.subs[0])+".size()";
   } else if(astTree.data=="data_arrv_push") {
@@ -408,15 +411,15 @@ string generator(AST astTree, bool includeEndBrackets=true) {
   } else if(astTree.data=="system_io_file_pointer") {
     return generator(astTree.subs[0],false)+".tellg()";
   } else if(astTree.data=="system_io_file_pointer_move") {
-    if(includeEndBrackets) return "seek(&"+generator(astTree.subs[0],false)+", '"+generator(astTree.subs[1],false)+"', "+generator(astTree.subs[2],false)+");";
-    return "seek(&"+generator(astTree.subs[0],false)+", '"+generator(astTree.subs[1],false)+"', "+generator(astTree.subs[2],false)+")";
+    if(includeEndBrackets) return "uscor_lib_integrated_func_seek(&"+generator(astTree.subs[0],false)+", '"+generator(astTree.subs[1],false)+"', "+generator(astTree.subs[2],false)+");";
+    return "uscor_lib_integrated_func_seek(&"+generator(astTree.subs[0],false)+", '"+generator(astTree.subs[1],false)+"', "+generator(astTree.subs[2],false)+")";
   } else if(astTree.data=="system_io_file_close") {
     if(includeEndBrackets) return generator(astTree.subs[0],false)+".close();";
     else return generator(astTree.subs[0],false)+".close()";
   } else if(astTree.data=="system_io_file_open") {
     string fileAt = generator(astTree.subs[0],false);
-    if(includeEndBrackets) return fileAt+".open("+generator(astTree.subs[1],false)+", ((strfind(typeid("+fileAt+").name(), \"ifstream\")>=0) ? ifstream::in : ofstream::out));";
-    else return fileAt+".open("+generator(astTree.subs[1],false)+", ((strfind(typeid("+fileAt+").name(), \"ifstream\")>=0) ? ifstream::in : ofstream::out))";
+    if(includeEndBrackets) return fileAt+".open("+generator(astTree.subs[1],false)+", ((uscor_lib_integrated_func_strfind(typeid("+fileAt+").name(), \"ifstream\")>=0) ? ifstream::in : ofstream::out));";
+    else return fileAt+".open("+generator(astTree.subs[1],false)+", ((uscor_lib_integrated_func_strfind(typeid("+fileAt+").name(), \"ifstream\")>=0) ? ifstream::in : ofstream::out))";
   } else if(astTree.data=="system_io_file_declare") {
     if(astTree.subs.size()==3) {
       if(astTree.subs[0].data=="ifs") {
@@ -644,13 +647,13 @@ void generateHeaders(ofstream *fileOutput, AST *astRead) {
     (*fileOutput)<<"#include "<<listOfHeaders[index]<<endl;
   
   (*fileOutput)<<endl<<"using namespace std;"<<endl<<endl;
-  (*fileOutput)<<"string strins(string s1, int n, string s2) {s1.insert(n, s2);return s2;}"<<endl;
-  (*fileOutput)<<"int strfind(string s1, string s2) {return s1.find(s2);}"<<endl;
-  (*fileOutput)<<"string substr(string s1, int i1, int i2) {return s1.substr(i1, i2);}"<<endl;
-  (*fileOutput)<<"bool strToBool(string s) {for(int i=0;i<s.length();i++) {s[i]=tolower(s[i]);}return(s!=\"false\"&&s!=\"0\"&&s!=\"\");}"<<endl;
-  (*fileOutput)<<"int strcmp(string s1, string s2) {return s1.compare(s2);}"<<endl;
-  (*fileOutput)<<"void execComd(string s) {system(s.c_str());}"<<endl;
-  (*fileOutput)<<"void seek(ifstream *fileInput, char type, int number) {if(type=='b') (*fileInput).seekg(number, ios::beg); else if(type=='e') (*fileInput).seekg(number, ios::end); else (*fileInput).seekg(number, ios::cur);}"<<endl;
+  (*fileOutput)<<"string uscor_lib_integrated_func_strins(string s1, int n, string s2) {s1.insert(n, s2);return s2;}"<<endl;
+  (*fileOutput)<<"int uscor_lib_integrated_func_strfind(string s1, string s2) {return s1.find(s2);}"<<endl;
+  (*fileOutput)<<"string uscor_lib_integrated_func_substr(string s1, int i1, int i2) {return s1.substr(i1, i2);}"<<endl;
+  (*fileOutput)<<"bool uscor_lib_integrated_func_strToBool(string s) {for(int i=0;i<s.length();i++) {s[i]=tolower(s[i]);}return(s!=\"false\"&&s!=\"0\"&&s!=\"\");}"<<endl;
+  (*fileOutput)<<"int uscor_lib_integrated_func_strcmp(string s1, string s2) {return s1.compare(s2);}"<<endl;
+  (*fileOutput)<<"void uscor_lib_integrated_func_execComd(string s) {system(s.c_str());}"<<endl;
+  (*fileOutput)<<"void uscor_lib_integrated_func_seek(ifstream *fileInput, char type, int number) {if(type=='b') (*fileInput).seekg(number, ios::beg); else if(type=='e') (*fileInput).seekg(number, ios::end); else (*fileInput).seekg(number, ios::cur);}"<<endl;
   for(int index=0;index<globalDefinedMethods.size();index++)
     (*fileOutput)<<globalDefinedMethods[index]<<endl;
 }

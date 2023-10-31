@@ -80,6 +80,7 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_io_file_pointer  | Fileaccess Name   | Data Value  | Returns the current position of the file pointer |
 | system_io_file_pointer_move  | Fileaccess Name, 'b' or 'e' or 'c', Data Value or Variable Name   | none  | Move the position of the file pointer, relative to the beginning, end, or current position |
 | system_file_copy  | Data Value or Variable Name, Data Value or Variable Name   | none  | Copy a directory and its contents to another directory |
+| system_file_rename  | Data Value or Variable Name, Data Value or Variable Name   | none  | Rename a directory or file to another name |
 | system_file_remove  | Data Value or Variable Name   | none  | Delete the file or empty folder at a directory |
 | system_file_allremove  | Data Value or Variable Name   | none  | Delete a directory including all its contents |
 | system_file_createdir  | Data Value or Variable Name   | none  | Create the specified directory |
