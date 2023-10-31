@@ -1,8 +1,6 @@
-/* USCOR PROGRAMMING LANGUAGE - AN ESOTERIC PROGRAMMING LANGUAGE MADE BY FARAAZ JAN */
+/* USCOR PROGRAMMING LANGUAGE - A SEMI ESOTERIC PROGRAMMING LANGUAGE MADE BY FARAAZ JAN */
 
-#include "lexer.h"
 #include "generator.h"
-#include "parser.h"
 
 #include <filesystem>
 #include <unistd.h>
@@ -69,7 +67,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  cout<<"USCOR PROGRAMMING LANGUAGE\nMADE BY FARAAZ JAN\n\nNote: you must have the GNU C++ compiler for this compiler to work.\n\n";
+  cout<<"USCOR PROGRAMMING LANGUAGE\nCOMPILER VERSION "+currentVersion.versionString()+"\nMADE BY FARAAZ JAN\n\nNote: you must have the GNU C++ compiler for this compiler to work.\n\n";
 
   if(!CLICommand) {
     cout<<"Address of .usc file: ";
@@ -97,16 +95,41 @@ int main(int argc, char *argv[]) {
 
   cout<<"done!\n\nParsing... ";
   AST parsedProgram = parse(&tokens);
-  //printAstTree(parsedProgram);
   cout<<"done!\n\n";
+  
 
   fileOut.open(inputFileName+".cpp", ios::out);
   cout<<"Transpiling... ";
-  generateHeaders(&fileOut);
+  generateHeaders(&fileOut,&parsedProgram);
   generateMainCode(&fileOut,&parsedProgram);
+  cout<<"done!\n\n";
+
+
+  cout<<"Testing program compatibility... ";
+  switch (programSupported) {
+    case 'o':
+    cout<<"unsuccessful.\n\nMinimum program version supported is "+minimumCompatibleVersion.versionString()+". Use an older Uscor compiler or change/remove version header and try again.\n\n";
+    return 0;
+    break;
+    case 'n':
+    cout<<"unsuccessful.\n\nMaximum program version supported is "+currentVersion.versionString()+". Use a newer Uscor compiler or change/remove version header and try again.\n\n";
+    return 0;
+    break;
+    case 'y':
+    cout<<"done!\n\n";
+    break;
+    default:
+    cout<<"done* (Version headers are highly recommended)\n\n";
+    break;
+  }
+
+
+
+  
+  cout<<"Compiling with g++... ";
+
   fileOut.flush();
   fileOut.close();
-  cout<<"done!\n\nCompiling with g++... ";
   
   string execCmd = "g++ -o "+inputFileName+".exe "+inputFileName+".cpp";
   system(execCmd.c_str());
@@ -119,6 +142,7 @@ int main(int argc, char *argv[]) {
       cout<<"done!\n\nOutput file at \""<<inputFileName<<".exe\" and \""+inputFileName+".cpp\"";
     }
   } else {
-    cout<<"unsuccessful.\n\nPlease verify that GNU Compiler Collection is installed.\n\n";
+    if(!produceCpp&&fexists(inputFileName+".cpp")) filesystem::remove(inputFileName+".cpp");
+    cout<<"unsuccessful.\n\nPlease verify that GNU Compiler Collection and all necessary dependencies are installed.\n\n";
   }
 }

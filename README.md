@@ -7,7 +7,7 @@ An esoteric programming language based on C++ and inspired by Lisp
 I was bored. Ignore the exorbitant amount of underscores in code
 
 ## How to use
-- First make sure that you have the GNU Compiler Collection installed. Windows users can install MinGW. Most Linux distros have g++ preinstalled, otherwise you can install it with `sudo apt-get install g++`. The steps necessary to get the GNU Compiler running on macOS go beyond the scope of this readme, but it should be possible following a tutorial of some kind.
+- First make sure that you have the [GNU Compiler Collection](https://gcc.gnu.org/) installed. Windows users can install [MinGW](https://www.mingw-w64.org/). Most Linux distros have g++ preinstalled, otherwise you can install it with `sudo apt-get install g++`. The steps necessary to get the GNU Compiler running on macOS go beyond the scope of this readme, but it should be possible following a tutorial of some kind.
 - There are two ways to compile a .usc program.
 - You can double click the .exe file for the compiler, which will ask for the address of the .usc file to be compiled
 - You can run the compiler as a command line tool. If you do this, you have options:
@@ -29,7 +29,9 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_forcen  | Function/Method  | Same as input  | Force a function or method to be used as an expression instead of an action. Intended for debugging.  |
 | string_length  | Variable Name or Data Value  | Data Value  | Get the length of a string  |
 | string_substr  | Variable Name or Data Value, Variable Name or Data Value, Variable Name or Data Value  | Data Value  | Return a substring of param0 between positions param1 and param2  |
+| string_insert  | Variable Name or Data Value, Variable Name or Data Value, Variable Name or Data Value  | Data Value  | Return string param0 with string param2 inserted at position param1  |
 | string_find  | Variable Name or Data Value, Variable Name or Data Value  | Data Value  | Return the index of the first occurrence of param1 in param0  |
+| string_escape  | Data Value  | Data Value  | Evaluate the escape characters of input  |
 | math_random_seed  | Variable Name or Data Value  | none  | Seed a random number generator  |
 | math_random  | none  | Data Value  | Generate a random number  |
 | math_mod  | Variable Name or Data Value, Variable Name or Data Value  | Data Value  | Run a modulo operator on data  |
@@ -55,7 +57,7 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_ifelse  | Boolean Value/Name, Function/Method, Function/Method  | none  | If param0 is true, run the first function. Otherwise, run the second one. |
 | system_run  | Functions/Methods  | none  | Run all function paramters  |
 | system_cond  | Boolean Value/Name, Variable Name or Data Value, Variable Name or Data Value  | Data Value  | If param0 is true, return param1, otherwise return param2  |
-| system_exit  | none   | none  | Exit the program  |
+| system_exit  | none   | none  | Exit the program or return a global function value if param0 is specified (return "mt" if using an mt function)  |
 | system_break  | none   | none  | Break a loop  |
 | system_while  | Boolean Value/Name, Functions/Methods...   | none  | Repeat the functions/methods while the boolean value is true  |
 | system_for  | Function/Method, Boolean Value/Name, Function/Method, Functions/Methods...   | none  | Run param0 before the loop, then repeat the functions/methods so long as param1 is true. The method in param2 is run after every iteration  |
@@ -77,18 +79,27 @@ I was bored. Ignore the exorbitant amount of underscores in code
 | system_io_file_iseof  | Fileaccess Name   | Boolean Value  | Return whether the file has finished reading |
 | system_io_file_pointer  | Fileaccess Name   | Data Value  | Returns the current position of the file pointer |
 | system_io_file_pointer_move  | Fileaccess Name, 'b' or 'e' or 'c', Data Value or Variable Name   | none  | Move the position of the file pointer, relative to the beginning, end, or current position |
-| system_run_cpp  | String value   | none  | Run C++ code |
+| system_file_copy  | Data Value or Variable Name, Data Value or Variable Name   | none  | Copy a directory and its contents to another directory |
+| system_file_remove  | Data Value or Variable Name   | none  | Delete the file or empty folder at a directory |
+| system_file_allremove  | Data Value or Variable Name   | none  | Delete a directory including all its contents |
+| system_file_createdir  | Data Value or Variable Name   | none  | Create the specified directory |
+| system_file_setdir  | Data Value or Variable Name   | none  | Change the current directory |
+| system_file_exists  | Data Value or Variable Name   | Boolean Value  | Return whether or not the file or directory exists |
+| system_file_tempdir  | none   | Data Value  | Gives a temporary working directory |
+| system_file_curdir  | none   | Data Value  | Gives the current directory |
+| system_run_cpp  | String Value   | none  | Run C++ code |
+| system_run_shell  | String Value or Variable Name   | none  | Run shell commands |
+| lib_cinclude  | String Value...   | none  | Add C++ program headers |
+| lib_include  | String Value...   | none  | Add Uscor program headers |
+| lib_cdefine  | String Value, String Value, String Value   | none  | Define C++ functions. Param0 is the function name, param1 is the C++ reference to the function, and param2 is the C++ code |
+| lib_ldefine  | String Value, anything   | none  | Define a local Uscor-replace function. Param0 is function name, and param1 is the replacement. All instances of (param__N) are replaced with corresponding parameters |
+| lib_typedefine  | String Value, String Value, String Value   | none  | Define a data type. Param0 is the type name, param1 is the C++ type name, and param2 is the definition of the type name. |
+| data_deref  | Variable Name   | Variable Name  | Dereference a data value by pointer |
+| data_ref  | Variable Name   | Variable Name  | Reference a data value by pointer |
+| require  | Integer Value, Integer Value, Integer Value   | none  | The intended version compiler to build this program. This is helpful in programs where newer versions of Uscor may break compatibility. |
 
 ```
-Add iterator, esp for files
-
-Add <filesystem>
-
-Add <chrono> and <ctime> (including fps and asynch timer features, and time(NULL) method)
-
-Add live keyboard/mouse input (including mouse position)
-
-Add GUI/canvas
+Add "Uscor" prefix to all helper functions to prevent code collisions
 ```
 
 ## Data Types
@@ -110,6 +121,8 @@ Add GUI/canvas
 | ullint  | Unsigned Long Long Integer  |
 | ldouble  | Long Double  |
 | mt  | Void/No data  |
+| (data_ref__DATATYPE)  | A reference to another data type  |
+| (data_vector__DATATYPE)  | A vector of another data type  |
 
 ## How It Works
 1. A lexer program runs through the entire program, generating a list of tokens.

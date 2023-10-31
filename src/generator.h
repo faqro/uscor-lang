@@ -2,13 +2,160 @@
 #define GENERATOR_H
 
 #include <fstream>
+#include <algorithm>
 #include "datadef.h"
+#include "lexer.h"
+#include "parser.h"
 
 using namespace std;
 
+versionNumber currentVersion(1, 1, 0);
+versionNumber minimumCompatibleVersion(1, 1, 0);
+
+char programSupported='u'; //u means unclear, y means yes, o means program is too old, n means program is too new
+
+
+
+vector<string> listOfHeaders;
+vector<string> globalDefinedMethods;
+
+struct dataTypeKey {
+  string uscorType; //the user-side Uscor data type to call
+  string cMappedType; //the c data type to call it as.
+};
+vector<dataTypeKey> customDataTypes;
+
+bool customDataTypeExists(string s) {
+  for(int i = 0; i < customDataTypes.size(); i++) {
+    if(customDataTypes[i].uscorType==s) return true;
+  } return false;
+}
+dataTypeKey getCustomDataType(string s) {
+  for(int i = 0; i < customDataTypes.size(); i++) {
+    if(customDataTypes[i].uscorType==s) return customDataTypes[i];
+  }
+}
+
+
+struct funcDictionary {
+  string uscorCall; //the user-side Uscor function to call
+
+  bool astReplace=false; //whether the function is a local AST replace function or a global c function
+
+  string cppCall; //the c function to call if it is a c function. Note that global non-c functions also use this.
+  bool hasParameters=true; //whether this is a function or just a piece of data
+
+  AST astToReplace; //the AST branch to replace the function when it is called. All sub branches with the (lib_param__0), (lib_param__1), etc. will be replaced with paramters entered
+};
+
+vector<funcDictionary> functionDictionaryUscor;
+
+bool hasCustomDefinition(string s) {
+  for(int ind=0;ind<functionDictionaryUscor.size();ind++) {
+    if(functionDictionaryUscor[ind].uscorCall==s) return true;
+  } return false;
+}
+
+funcDictionary findFunctionCall(string s) {
+  for(int ind=0;ind<functionDictionaryUscor.size();ind++) {
+    if(functionDictionaryUscor[ind].uscorCall==s) return functionDictionaryUscor[ind];
+  }
+  funcDictionary failedFuncFind;
+  failedFuncFind.uscorCall="USCOR_FIND_FAILED";
+  return failedFuncFind;
+}
+
+string substr(string s1, int i1, int i2) {return s1.substr(i1, i2);}
+
 string generator(AST astTree, bool includeEndBrackets);
 
+string strToVal(string s) {
+  s=s.substr(1, s.length()-2);
+
+  for(int ind = 0; ind < s.length(); ind++) {
+    if(s.length() > ind+1 &&s[ind]==92) {
+      string replace;
+      switch(s[ind+1]) {
+        case 'a':
+        replace="\a";
+        break;
+
+        case 'b':
+        replace="\b";
+        break;
+
+        case 'n':
+        replace="\n";
+        break;
+
+        case 'f':
+        replace="\f";
+        break;
+
+        case 'r':
+        replace="\r";
+        break;
+
+        case 't':
+        replace="\t";
+        break;
+
+        case 'v':
+        replace="\v";
+        break;
+
+        case 39:
+        replace="\'";
+        break;
+
+        case 34:
+        replace="\"";
+        break;
+
+        case 92:
+        replace="\\";
+        break;
+
+        case 63:
+        replace="\?";
+        break;
+
+        default:
+        replace="";
+        break;
+      }
+      s.replace(ind, 2, replace);
+    }
+  }
+
+  return s;
+}
+
+AST replaceWithParameters(AST astIn, vector<AST> paramsIn) {
+  for(int i = 0; i < astIn.subs.size(); i++) {
+    if(astIn.subs[i].data=="param") {
+      int paramNumber = stoi(astIn.subs[i].subs[0].data);
+      astIn.subs[i]=paramsIn[paramNumber];
+    } else {
+      astIn.subs[i] = replaceWithParameters(astIn.subs[i], paramsIn);
+    }
+  } return astIn;
+}
+
+AST replaceWithSetupParameters(AST astIn) {
+  for(int i = 0; i < astIn.subs.size(); i++) {
+    if(astIn.subs[i].data=="param") {
+      astIn.subs[i].data="uscor_lib_functions_param"+astIn.subs[i].subs[0].data;
+      astIn.subs[i].subs.resize(0);
+    } else {
+      astIn.subs[i] = replaceWithSetupParameters(astIn.subs[i]);
+    }
+  } return astIn;
+}
+
 string dataTypeGet(AST astTree) {
+  if(astTree.data=="data_ref") return dataTypeGet(astTree.subs[0])+" *";
+  if(astTree.data=="data_vector") return "vector<"+dataTypeGet(astTree.subs[0])+">";
   string dataType=generator(astTree,false);
   if(dataType=="int") return "int";
   else if(dataType=="str") return "string";
@@ -27,7 +174,9 @@ string dataTypeGet(AST astTree) {
   else if(dataType=="ullint") return "unsigned long long";
   else if(dataType=="ldouble") return "long double";
   else if(dataType=="mt") return "void";
-  else return "NULL1";
+  else if(dataType=="NULL") return "NULL";
+  else if(customDataTypeExists(dataType)) return getCustomDataType(dataType).cMappedType;
+  else return "NULL";
 }
 
 string generator(AST astTree, bool includeEndBrackets=true) {
@@ -141,8 +290,14 @@ string generator(AST astTree, bool includeEndBrackets=true) {
       output=output + "*" + generator(astTree.subs[i1],false);
     } return "("+output+")";
   } else if(astTree.data=="system_exit") {
-    if(includeEndBrackets) return "return 0;";
-    else return "return 0";
+    string returnValueOut = "return";
+    if(astTree.subs.size()>0) {
+      if(!(astTree.subs[0].data=="mt")) returnValueOut=returnValueOut+" "+generator(astTree.subs[0],false);
+    } else {
+      returnValueOut=returnValueOut+" 0";
+    }
+    if(includeEndBrackets) return returnValueOut+";";
+    else return returnValueOut;
   } else if(astTree.data=="system_break") {
     if(includeEndBrackets) return "break;";
     else return "break";
@@ -152,7 +307,7 @@ string generator(AST astTree, bool includeEndBrackets=true) {
   } else if(astTree.data=="system_run_cpp") {
     if(astTree.subs[0].data.length()>=2&&astTree.subs[0].data[0]==34&&astTree.subs[0].data[astTree.subs[0].data.length()]==34) {
       string cppCode=astTree.subs[0].data;
-      return cppCode.substr(1, cppCode.size() - 2);
+      return strToVal(cppCode);
     } else {
       return "";
     }
@@ -160,6 +315,29 @@ string generator(AST astTree, bool includeEndBrackets=true) {
     return "substr("+generator(astTree.subs[0],false)+", "+generator(astTree.subs[1],false)+", "+generator(astTree.subs[2],false)+")";
   } else if(astTree.data=="string_find") {
     return "strfind("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+")";
+  } else if(astTree.data=="string_insert") {
+    return "strins("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+","+generator(astTree.subs[2],false)+")";
+  } else if(astTree.data=="system_file_copy") {
+    if(includeEndBrackets) return "filesystem::copy("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+", filesystem::copy_options::recursive);";
+    else return "filesystem::copy("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+", filesystem::copy_options::recursive)";
+  } else if(astTree.data=="system_file_remove") {
+    if(includeEndBrackets) return "filesystem::remove("+generator(astTree.subs[0],false)+");";
+    else return "filesystem::remove("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_file_allremove") {
+    if(includeEndBrackets) return "filesystem::remove_all("+generator(astTree.subs[0],false)+");";
+    else return "filesystem::remove_all("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_file_createdir") {
+    if(includeEndBrackets) return "filesystem::create_directories("+generator(astTree.subs[0],false)+");";
+    else return "filesystem::create_directories("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_file_setdir") {
+    if(includeEndBrackets) return "filesystem::current_path("+generator(astTree.subs[0],false)+");";
+    else return "filesystem::current_path("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_file_exists") {
+    return "filesystem::exists("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_file_tempdir") {
+    return "filesystem::temp_directory_path()";
+  } else if(astTree.data=="system_file_curdir") {
+    return "filesystem::current_path()";
   } else if(astTree.data=="math_pow") {
     return "pow("+generator(astTree.subs[0],false)+","+generator(astTree.subs[1],false)+")";
   } else if(astTree.data=="math_log") {
@@ -188,8 +366,17 @@ string generator(AST astTree, bool includeEndBrackets=true) {
     return "asin("+generator(astTree.subs[0],false)+")";
   } else if(astTree.data=="math_atan") {
     return "atan("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="data_ref") {
+    return "(&"+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="data_deref") {
+    return "(*"+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="string_escape") {
+    return strToVal(generator(astTree.subs[0],false));
   } else if(astTree.data=="string_length") {
     return "strlen("+generator(astTree.subs[0],false)+")";
+  } else if(astTree.data=="system_run_shell") {
+    if(includeEndBrackets) return "execComd("+generator(astTree.subs[0],false)+");";
+    else return "execComd("+generator(astTree.subs[0],false)+")";
   } else if(astTree.data=="data_arrv_size") {
     return generator(astTree.subs[0])+".size()";
   } else if(astTree.data=="data_arrv_push") {
@@ -313,24 +500,163 @@ string generator(AST astTree, bool includeEndBrackets=true) {
     }
   } else if(astTree.data=="comment") {
     return "//"+astTree.subs[0].data;
+  } else if (hasCustomDefinition(astTree.data)) {
+    if(findFunctionCall(astTree.data).astReplace==false) {
+      string cppReturnFunction;
+      if(findFunctionCall(astTree.data).hasParameters) {
+        cppReturnFunction= findFunctionCall(astTree.data).cppCall + "(";
+        if(astTree.subs.size()>0) cppReturnFunction=cppReturnFunction+generator(astTree.subs[0], false);
+        for (int i=1; i< astTree.subs.size(); i++) {
+          cppReturnFunction=cppReturnFunction+", "+generator(astTree.subs[i], false);
+        } cppReturnFunction=cppReturnFunction+")";
+      } else {
+        cppReturnFunction= findFunctionCall(astTree.data).cppCall;
+      }
+
+      if(includeEndBrackets) return cppReturnFunction+";";
+      else return cppReturnFunction;
+    } else {
+      vector<AST> listOfInputParameters;
+      listOfInputParameters.resize(0);
+      for(int indexP = 0;indexP < astTree.subs.size();indexP++) {
+        listOfInputParameters.push_back(astTree.subs[indexP]);
+      }
+      if(includeEndBrackets) return generator(replaceWithParameters(findFunctionCall(astTree.data).astToReplace, listOfInputParameters), true);
+      else return generator(replaceWithParameters(findFunctionCall(astTree.data).astToReplace, listOfInputParameters), false);
+    }
   } else return astTree.data;
 }
-void generateHeaders(ofstream *fileOutput) {
-  (*fileOutput)<<"#include <iostream>"<<endl;
-  (*fileOutput)<<"#include <cmath>"<<endl;
-  (*fileOutput)<<"#include <string.h>"<<endl;
-  (*fileOutput)<<"#include <fstream>"<<endl;
-  (*fileOutput)<<"#include <vector>"<<endl;
+
+void headerList(AST *astRead) {
+  for(int i = 0; i < (*astRead).subs.size();) {
+    if((*astRead).subs[i].data=="lib_cinclude") {
+      for(int i2 = 0; i2 < (*astRead).subs[i].subs.size(); i2++) {
+        if(count(listOfHeaders.begin(), listOfHeaders.end(), (*astRead).subs[i].subs[i2].data)<=0) {
+          listOfHeaders.push_back((*astRead).subs[i].subs[i2].data);
+        }
+      }
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else if((*astRead).subs[i].data=="lib_include") {
+      for(int i2 = 0; i2 < (*astRead).subs[i].subs.size(); i2++) {
+        ifstream readNextDependencies(strToVal((*astRead).subs[i].subs[i2].data));
+        vector<string> tokensTemp = lexer(&readNextDependencies);
+        readNextDependencies.close();
+
+        AST parsedProgramTemp = parse(&tokensTemp);
+        headerList(&parsedProgramTemp);
+      }
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+
+    } else if((*astRead).subs[i].data=="lib_cdefine") {
+      
+      if((*astRead).subs[i].subs[0].data!="NULL") {
+        funcDictionary tempPush;
+        tempPush.uscorCall=(*astRead).subs[i].subs[0].data;
+        tempPush.astReplace=false;
+        string cppCallTemp=strToVal((*astRead).subs[i].subs[1].data);
+        if(cppCallTemp[cppCallTemp.length()-1]==')'&&cppCallTemp[cppCallTemp.length()-2]=='(') {
+          tempPush.cppCall=substr(cppCallTemp, 0, cppCallTemp.length()-2);
+          tempPush.hasParameters=true;
+        } else {
+          tempPush.cppCall=cppCallTemp;
+          tempPush.hasParameters=false;
+        }
+        functionDictionaryUscor.push_back(tempPush);
+      }
+
+      globalDefinedMethods.push_back(strToVal((*astRead).subs[i].subs[2].data));
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else if((*astRead).subs[i].data=="lib_typedefine") {
+      dataTypeKey tempPush;
+      tempPush.uscorType=(*astRead).subs[i].subs[0].data;
+      tempPush.cMappedType=strToVal((*astRead).subs[i].subs[1].data);
+
+      if((*astRead).subs[i].subs[2].data!="NULL") {
+        globalDefinedMethods.push_back(strToVal((*astRead).subs[i].subs[2].data));
+      } customDataTypes.push_back(tempPush);
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else if((*astRead).subs[i].data=="lib_gdefine") {
+
+      funcDictionary tempPush;
+
+      tempPush.uscorCall=(*astRead).subs[i].subs[0].data;
+      tempPush.cppCall=(*astRead).subs[i].subs[0].data;
+      tempPush.hasParameters=true;
+      tempPush.astReplace=false;
+
+      string myFunctionDefinition = dataTypeGet((*astRead).subs[i].subs[1]) + " " + (*astRead).subs[i].subs[0].data;
+      myFunctionDefinition+='(';
+      if(stoi((*astRead).subs[i].subs[2].data)>0) {
+        myFunctionDefinition=myFunctionDefinition+dataTypeGet((*astRead).subs[i].subs[3])+" uscor_lib_functions_param0";
+        for(int indexParamsRec=1;indexParamsRec < stoi((*astRead).subs[i].subs[2].data);indexParamsRec++) {
+          myFunctionDefinition=myFunctionDefinition+", "+dataTypeGet((*astRead).subs[i].subs[indexParamsRec+3])+" uscor_lib_functions_param"+to_string(indexParamsRec);
+        }
+      } myFunctionDefinition=myFunctionDefinition+") {";
+
+      for(int indexAct=stoi((*astRead).subs[i].subs[2].data)+3; indexAct<(*astRead).subs[i].subs.size();indexAct++) {
+        myFunctionDefinition=myFunctionDefinition+"\n  "+generator(replaceWithSetupParameters((*astRead).subs[i].subs[indexAct]));
+      } myFunctionDefinition=myFunctionDefinition+"\n}";
+
+      globalDefinedMethods.push_back(myFunctionDefinition);
+      
+      functionDictionaryUscor.push_back(tempPush);
+
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else if((*astRead).subs[i].data=="lib_ldefine") {
+
+      funcDictionary tempPush;
+      tempPush.astReplace=true;
+      tempPush.uscorCall=(*astRead).subs[i].subs[0].data;
+      tempPush.astToReplace=(*astRead).subs[i].subs[1];
+
+      functionDictionaryUscor.push_back(tempPush);
+      
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else if((*astRead).subs[i].data=="require") {
+
+      versionNumber compareVersions(stoi((*astRead).subs[i].subs[0].data), stoi((*astRead).subs[i].subs[1].data), stoi((*astRead).subs[i].subs[2].data));
+      
+      if(versionComparison(compareVersions, minimumCompatibleVersion)==1) programSupported='o';
+      else if(programSupported!='o'&&versionComparison(compareVersions, currentVersion)==-1) programSupported='n';
+      else if(programSupported!='o'&&programSupported!='n') programSupported='y';
+
+      (*astRead).subs.erase((*astRead).subs.begin()+i);
+    } else {
+      headerList(&((*astRead).subs[i]));
+      i++;
+    }
+  }
+}
+
+void generateHeaders(ofstream *fileOutput, AST *astRead) {
+  listOfHeaders={"<iostream>", "<cmath>", "<string.h>", "<fstream>", "<vector>", "<filesystem>"};
+  globalDefinedMethods.resize(0);
+  functionDictionaryUscor.resize(0);
+  customDataTypes.resize(0);
+  
+  headerList(astRead);
+  for(int index=0;index<listOfHeaders.size();index++)
+    (*fileOutput)<<"#include "<<listOfHeaders[index]<<endl;
+  
   (*fileOutput)<<endl<<"using namespace std;"<<endl<<endl;
+  (*fileOutput)<<"string strins(string s1, int n, string s2) {s1.insert(n, s2);return s2;}"<<endl;
   (*fileOutput)<<"int strfind(string s1, string s2) {return s1.find(s2);}"<<endl;
   (*fileOutput)<<"string substr(string s1, int i1, int i2) {return s1.substr(i1, i2);}"<<endl;
   (*fileOutput)<<"bool strToBool(string s) {for(int i=0;i<s.length();i++) {s[i]=tolower(s[i]);}return(s!=\"false\"&&s!=\"0\"&&s!=\"\");}"<<endl;
   (*fileOutput)<<"int strcmp(string s1, string s2) {return s1.compare(s2);}"<<endl;
+  (*fileOutput)<<"void execComd(string s) {system(s.c_str());}"<<endl;
   (*fileOutput)<<"void seek(ifstream *fileInput, char type, int number) {if(type=='b') (*fileInput).seekg(number, ios::beg); else if(type=='e') (*fileInput).seekg(number, ios::end); else (*fileInput).seekg(number, ios::cur);}"<<endl;
+  for(int index=0;index<globalDefinedMethods.size();index++)
+    (*fileOutput)<<globalDefinedMethods[index]<<endl;
 }
 void generateMainCode(ofstream *fileOutput, AST *astRead) {
   (*fileOutput)<<endl<<"int main() {"<<endl;
-  for(int ind = 0; ind < (*astRead).subs.size(); ind++) (*fileOutput)<<" "<<generator((*astRead).subs[ind],true)<<endl;
+  for(int ind = 0; ind < (*astRead).subs.size(); ind++) (*fileOutput)<<"  "<<generator((*astRead).subs[ind],true)<<endl;
   (*fileOutput)<<"}";
 }
 

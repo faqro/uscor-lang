@@ -1,0 +1,11 @@
+(require__1__1__0)
+
+(lib_include__"exampleLibrary.usclib")
+
+(<<__(data_arrv_declare__str__myArray__1)__(data_arr_group__" "__" "))
+(<<__(system_io_output__console)__"Enter your first name: ")
+(<<__(data_arr_specify__myArray__0)__(system_io_input__console))
+(<<__(system_io_output__console)__"Enter your last name: ")
+(<<__(data_arr_specify__myArray__1)__(system_io_input__console))
+(printFullName__(data_arr_specify__myArray__0)__(data_arr_specify__myArray__1))
+(<<__(data_arr_specify__myArray__0)__(system_io_input__console))

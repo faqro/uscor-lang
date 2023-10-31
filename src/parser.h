@@ -45,7 +45,7 @@ AST parse(vector<string> *tokens) {
 vector<string> getAstPrint(AST astTree) {
   vector<string> astReturn;
   astReturn.resize(1);
-  astReturn[0] = astTree.data;
+  astReturn[0] = "["+astTree.data+"]";
   for (int i = 0; i < astTree.subs.size(); i++) {
     vector<string> astSubsPrint = getAstPrint(astTree.subs[i]);
     for (int i2 = 0; i2 < astSubsPrint.size(); i2++) astSubsPrint[i2] = "  " + astSubsPrint[i2];

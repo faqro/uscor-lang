@@ -1,0 +1,9 @@
+(require__1__1__0)
+(data_declare__str__fileName)
+(<<__(data_declare__str__fileData)__"")
+(<<__(system_io_output__console)__"Enter the file to read: ")
+(<<__fileName__(system_io_input__console))
+(system_io_file_declare__ifs__openFileRead__fileName)
+(system_while__(system_not__(system_io_file_iseof__openFileRead))__(system_run__
+(data_declare__char__charRead)__(<<__charRead__(system_io_input__file-__openFileRead))__(<<__(system_io_output__console)__charRead)__(<<__fileData__(+__fileData__(data_type_conversion__char__str__charRead)))))
+(<<__(data_arr_specify__myArray__0)__(system_io_input__console))

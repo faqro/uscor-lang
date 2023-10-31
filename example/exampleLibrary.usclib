@@ -1,0 +1,2 @@
+(lib_gdefine__printFullName__mt__2__str__str__(<<__(system_io_output__console)__(+__"Hello, "__(param__0)__" "__(param__1)__"!")))
+(lib_ldefine__averageOfTwoInt__(/__(+__(param__1)__(param__1))__2))
